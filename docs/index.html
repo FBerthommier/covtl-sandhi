@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>covtl-sandhi v0.1.0 — Inter-word sandhi demos (COVTL pipeline)</title>
+<style>
+  body{font-family:Georgia,serif;max-width:880px;margin:2.5rem auto;padding:0 1.2rem;
+       color:#1a1a2e;background:#faf9f6;line-height:1.55}
+  h1{font-size:1.5rem;border-bottom:2px solid #2c5f8a;padding-bottom:.4rem}
+  h1 .v{color:#2c5f8a}
+  table{border-collapse:collapse;width:100%;margin:1.2rem 0}
+  th,td{border:1px solid #c9c5ba;padding:.5rem .7rem;text-align:left;font-size:.95rem}
+  th{background:#eef3f7}
+  code{font-family:Consolas,monospace;background:#eee9dd;padding:.05rem .3rem;border-radius:3px}
+  .note{font-size:.9rem;color:#555}
+</style>
+</head>
+<body>
+<h1>covtl-sandhi <span class="v">v0.1.0</span> — inter-word sandhi demos</h1>
+<p>Self-contained articulatory simulations (COVTL + VocalTractLab, speaker jd3,
+WAV embedded as base64 — no server, no network). Each page compares the three
+sandhi modes (<code>pre</code>, <code>g2p</code> ★, <code>post</code>) against the
+<code>off</code> baseline. English pages (<code>_en</code>) are translations of the
+originals; the linguistic examples are identical.</p>
+<table>
+<tr><th>Page</th><th>English</th><th>Content</th><th>Audio clips</th></tr>
+<tr><td><a href="demo_liaison_fr.html">Français — liaison</a></td>
+    <td><a href="demo_liaison_fr_en.html">French (EN)</a></td>
+    <td>latent consonant, 19 cases + expressive prosody + en control</td><td>42</td></tr>
+<tr><td><a href="demo_liaison_it.html">Italiano — raddoppiamento + d eufonico</a></td>
+    <td><a href="demo_liaison_it_en.html">Italian (EN)</a></td>
+    <td>RS triggers, chained pairs, affricates, full sentence</td><td>27</td></tr>
+<tr><td><a href="demo_liaison_multi.html">Multilingue — 5 langues</a></td>
+    <td><a href="demo_liaison_multi_en.html">Multilingual (EN)</a></td>
+    <td>fr/it/es/pt/de side by side, per-language sections</td><td>74</td></tr>
+</table>
+<p class="note">Canonical CLI checks after installing the rule package into the
+pipeline: <code>vtl-synth run "faut il" -l fr --sandhi standard</code> →
+<code>fo.til</code> · <code>"a casa" -l it</code> → <code>a.kka.sa</code> ·
+<code>"los amigos" -l es</code> → <code>lo.sa.mi.gos</code> ·
+<code>"os amigos" -l pt</code> → <code>o.Z@.mi.guS</code> ·
+<code>"ein Apfel" -l de</code> → <code>ajn a.pf@l</code> ·
+<code>"far away" -l en</code> → <code>fa.R@.we</code>.
+License: GPL-3.0-or-later (upstream pipeline: FBerthommier/covtl-pipeline).</p>
+</body>
+</html>

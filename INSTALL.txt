@@ -1,0 +1,65 @@
+# covtl-sandhi v0.1.0 — installation rapide
+
+Contenu de l'archive
+--------------------
+  sandhi/                              le package de règles (Branch B)
+    __init__.py  base.py               API + niveaux (off/minimal/standard/careful)
+    fr.py en.py it.py es.py pt.py      un module par langue
+    data/*.txt                         vues éditables des tables
+    py.typed
+  tests/test_sandhi.py                 suite autonome (38 tests, aucun
+                                       pipeline requis — g2p stubs)
+  patch/covtl-pipeline-sandhi-hook.patch   le hook (Branch A) : patch git
+                                       du dépôt covtl-pipeline
+  pyproject.toml  README.md  CHANGELOG.md  LICENSE (GPL-3.0-or-later)
+
+Mise en route (5 minutes)
+-------------------------
+  # 1) pipeline vierge + hook (Branch A) — sorties bit-identiques
+  git clone https://github.com/FBerthommier/covtl-pipeline.git
+  cd covtl-pipeline
+  git apply patch/covtl-pipeline-sandhi-hook.patch
+  pip install -e .
+
+  # 2) activer les règles — AU CHOIX :
+  #    (le dossier du stub existe déjà : on copie le CONTENU, notez le "/.")
+  cp -r sandhi/. vtl_synth/utils/sandhi/     # copie (recommandé)
+  # ou :  pip install .                     # package pip
+
+  # 3) vérifier
+  vtl-synth run "faut il"    -l fr --sandhi standard --no-video -o out
+  #  -> fo.til
+  vtl-synth run "far away"   -l en --sandhi standard --no-video -o out
+  #  -> fa.R@.we      (linking-r : NOUVEAU, l'anglais)
+  vtl-synth run "los amigos" -l es --sandhi standard --no-video -o out
+  #  -> lo.sa.mi.gos
+  vtl-synth run "os amigos"  -l pt --sandhi standard --no-video -o out
+  #  -> o.Z@.mi.guS
+  vtl-synth run "a casa"     -l it --sandhi standard --no-video -o out
+  #  -> a.kka.sa
+  vtl-synth run "ein Apfel"  -l de --sandhi standard --no-video -o out
+  #  -> ajn a.pf@l    (frontière glottale)
+
+  # tests du package (autonomes)
+  pip install pytest && python -m pytest tests/ -q     # 38 passed
+
+Niveaux (filtre de couverture monotone, jamais de changement de
+phonologie) : off | minimal (règles catégoriques) | standard
+(recommandé — = le patch 5 langues v3 pour fr/it/es/pt/de) | careful
+(registre hyperarticulé : fr style soutenu, de + mots-outils).
+Modes (les 3 implémentations historiques en option) :
+--sandhi-mode g2p (défaut, recommandé) | post | pre.
+
+Vérifié sur le main du pipeline :
+  * baseline historique @ 41f6571 : hook seul, sorties BIT-IDENTIQUES
+    (155 passés vierge vs 165 hooké = +10 tests hook, 0 régression) ;
+  * le hook est DÉSORMAIS INTÉGRÉ au main du pipeline (commit
+    f60c73e, rebasé sur l'état poussé V1V2 @ 181c272) — sur un clone
+    récent, l'étape `git apply` est sans objet : les scripts
+    d'installation la détectent (« already applied ») et la sautent ;
+    tests hook sur cette baseline : 10 passed.
+    Le patch ci-joint reste utile pour les checkouts antérieurs à
+    f60c73e.
+  * package copié : suite du dépôt inchangée + 30/30 cas CLI
+    end-to-end (6 langues x niveaux x modes, SAMPA vérifiés) ;
+  * package pip : résolution par le hook vérifiée (fo.til).

@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "covtl-sandhi"
+version = "0.1.0"
+description = "Cross-word sandhi (liaison, raddoppiamento, enlace, encadeamento, Glottalversatz, a-an + onset linking) for the COVTL pipeline languages"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "GPL-3.0-or-later"}
+authors = [{name = "covtl-sandhi contributors"}]
+keywords = [
+    "tts", "g2p", "sandhi", "liaison", "raddoppiamento", "enlace",
+    "encadeamento", "glottal", "sampa", "vocal-tract", "covtl",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Sound/Audio :: Speech",
+    "Topic :: Text Processing :: Linguistic",
+]
+dependencies = []
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[project.urls]
+Upstream = "https://github.com/FBerthommier/covtl-pipeline"
+
+[tool.setuptools]
+packages = ["sandhi"]
+
+[tool.setuptools.package-data]
+sandhi = ["data/*.txt", "py.typed"]

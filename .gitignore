@@ -1,0 +1,10 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# LaTeX build artifacts (keep .tex and .pdf)
+docs/*.aux
+docs/*.log
+docs/*.out
+docs/*.toc

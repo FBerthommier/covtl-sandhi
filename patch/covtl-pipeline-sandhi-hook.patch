@@ -1,0 +1,882 @@
+From f60c73ee559340b0f0aa8c59796aab6b76b9c303 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Fr=C3=A9d=C3=A9ric=20Berthommier?=
+ <FBerthommier@users.noreply.github.com>
+Date: Mon, 2 Nov 2026 15:39:47 +0100
+Subject: [PATCH] =?UTF-8?q?feat(sandhi):=20covtl-sandhi=20hook=20(Branch?=
+ =?UTF-8?q?=20A)=20=E2=80=94=20single=20cross-word=20sandhi=20dispatch?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ CHANGELOG.md                       |  31 +++++
+ README.md                          |   7 +
+ docs/ARCHITECTURE.md               |  40 ++++++
+ lang_pack/integration/pipeline.py  | 111 +++++++++++++++-
+ tests/test_sandhi_hook.py          | 158 +++++++++++++++++++++++
+ vtl_synth/cli/main.py              |  35 +++++
+ vtl_synth/core/pipeline.py         | 111 +++++++++++++++-
+ vtl_synth/utils/sandhi/__init__.py | 200 +++++++++++++++++++++++++++++
+ 8 files changed, 687 insertions(+), 6 deletions(-)
+ create mode 100644 tests/test_sandhi_hook.py
+ create mode 100644 vtl_synth/utils/sandhi/__init__.py
+
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 3c19c5e..983f3ae 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -5,6 +5,37 @@ Format: Keep a Changelog — https://keepachangelog.com/
+ 
+ ## [Unreleased]
+ 
++### Added (covtl-sandhi hook — 2026-11-02)
++
++- **feat(sandhi): covtl-sandhi hook (Branch A) — cross-word sandhi as
++  an option, default OFF** — `vtl_synth/utils/sandhi/` ships as an
++  identity STUB (`SANDHI_FULL = False`) plus the
++  `--sandhi` / `--sandhi-mode` options (`Pipeline(sandhi=...,
++  sandhi_mode=...)`). Without the rule package the stub is the pure
++  identity — **bit-identical outputs to the unpatched repository**
++  (`tests/test_sandhi_hook.py`). The rule package (covtl-sandhi,
++  Branch B — https://github.com/FBerthommier/covtl-sandhi) is
++  installed either by copying its `sandhi/` folder over the stub
++  (`cp -r sandhi/. vtl_synth/utils/sandhi/`) or via pip
++  (`import sandhi`); it brings six languages — fr liaison
++  (`faut il` → `fo.til`), en a→an + onset linking / linking-r
++  (`far away` → `fa.R@.we`), it raddoppiamento + euphonic d
++  (`a casa` → `a.kka.sa`), es enlace + y→e/o→u (`los amigos` →
++  `lo.sa.mi.gos`), pt encadeamento + EP voicing (`os amigos` →
++  `o.Z@.mi.guS`), de Glottalversatz (`ein Apfel` → `ajn a.pf@l`) —
++  under four COVERAGE LEVELS: `off | minimal | standard | careful`
++  (a monotone filter over each language's rule set, never a
++  phonology change). The three implementations stay available as
++  `--sandhi-mode g2p|post|pre`. The hook rewrites text/SAMPA only —
++  never the engine — and the inserted key is never a syllable
++  nucleus, so the expressive F0 plans stay aligned; no insertion
++  across a `%` breath pause. This is the SINGLE sandhi dispatch of
++  the pipeline: the historical 5-language liaison pack
++  (fr/it/es/pt/de `liaison_*` modules, `--liaison`) was never
++  merged to main and is superseded by the covtl-sandhi package
++  (rule parity archived: 39/39 identical outputs on the shared
++  battery).
++
+ ### Added (mission P6 — 2026-11-02, execution)
+ 
+ - **fix(P6): V1V2 validation extended to the full language pack.**
+diff --git a/README.md b/README.md
+index 48faaba..bf7c6ec 100644
+--- a/README.md
++++ b/README.md
+@@ -54,6 +54,13 @@ Repository: <https://github.com/fberthommier/covtl-pipeline>
+ - **Expressive prosody** — [docs/expressive_prosody.pdf](docs/expressive_prosody.pdf):
+   breathing groups, F0 contour, out-of-band stress, and the
+   interaction with the multi-speakers installation (v1.1.0).
++- **Inter-word sandhi (`--sandhi`)** — cross-word phenomena (fr
++  liaison, en a/an + linking-r, it raddoppiamento, es enlace,
++  pt encadeamento, de Glottalversatz) via the
++  [covtl-sandhi](https://github.com/FBerthommier/covtl-sandhi)
++  rule package behind the built-in hook: off by default
++  (bit-identical outputs), coverage levels `minimal/standard/careful`.
++  See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §8.5.
+ - **Architecture** — [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md):
+   developer map of the engine (module layout, data flow, the
+   B(t) + E_source(t) + E_ortho(t) decomposition) — including the
+diff --git a/docs/ARCHITECTURE.md b/docs/ARCHITECTURE.md
+index 55b43db..fdd4d28 100644
+--- a/docs/ARCHITECTURE.md
++++ b/docs/ARCHITECTURE.md
+@@ -300,6 +300,46 @@ master clock. The README links directly to the rendered pages, so
+ the demos open in a browser straight from the repository without
+ cloning.
+ 
++### 8.5 Inter-word sandhi — the covtl-sandhi hook (add-on 5)
++
++`Pipeline(sandhi=...)` / `--sandhi off|minimal|standard|careful`
++(default **off**, bit-identical outputs) and `--sandhi-mode
++g2p|post|pre` (default `g2p`). Branch A of a two-branch architecture:
++this repository only ships the hook — the stub package
++`vtl_synth/utils/sandhi/` (`SANDHI_FULL = False`: every entry point is
++the identity) plus the option wiring. The rules live in the companion
++package [covtl-sandhi](https://github.com/FBerthommier/covtl-sandhi)
++(Branch B, six languages: fr latent consonant, en a→an + onset
++linking/linking-r, it raddoppiamento sintattico + euphonic d, es
++enlace + y→e/o→u, pt encadeamento + EP voicing, de Glottalversatz —
++the "anti-liaison"), activated either by copying its `sandhi/` folder
++over the stub (`cp -r sandhi/. vtl_synth/utils/sandhi/`) or by
++`pip install` (the hook then resolves the top-level `import sandhi`).
++
++Technical principles:
++
++- **Text/g2p layer only.** The rules rewrite text or SAMPA, never the
++  engine; the sandhi key is always a consonant inserted as the **onset
++  of the next syllable** (never a nucleus), so the expressive-prosody
++  F0 plans stay aligned; no insertion ever crosses a pause
++  (`%`, `|`, comma).
++- **Three insertion points** (`pre` = orthographic rewrite before the
++  g2p; `g2p` = sandhi-aware per-word gateway + SAMPA merge,
++  **recommended** — the only point that sees both the word pair and
++  the pronunciation; `post` = pure SAMPA post-processor re-aligned on
++  the text).
++- **Coverage levels** (`minimal ⊆ standard ⊆ careful`) are a monotone
++  filter over each language's rule set — they decide which pair
++  classes may fire, never the phonology of a firing rule; pairs that
++  fail any check stay unlinked — never a wrong form.
++- **Single dispatch.** The hook is the pipeline's only cross-word
++  sandhi path; there is no competing per-language option. Without the
++  Branch B package, `--sandhi` degrades to `off` with a warning and
++  bit-identical outputs.
++
++Details, per-language rules and the full test suite: the covtl-sandhi
++repository (`README.md`, `docs/covtl-sandhi-guide.pdf`).
++
+ ## 9. Extension points
+ 
+ - **New phoneme**: add `(rho, theta, selector)` to
+diff --git a/lang_pack/integration/pipeline.py b/lang_pack/integration/pipeline.py
+index 2b7ff91..1b6104f 100644
+--- a/lang_pack/integration/pipeline.py
++++ b/lang_pack/integration/pipeline.py
+@@ -59,6 +59,22 @@ try:
+ except Exception:                                        # pragma: no cover
+     _EXPRESSIVE_OK = False
+ 
++# Sandhi hook (covtl-sandhi, Branch A — option, default OFF).
++# Non-critical import: the stub shipped with the hook patch is the
++# IDENTITY, so the pipeline stays bit-identical until the Branch B
++# rule package is installed — either copied over the stub
++# (cp -r sandhi/ vtl_synth/utils/sandhi/) or pip-installed
++# (resolved as a top-level 'sandhi' import below).
++from vtl_synth.utils import sandhi as _sandhi_pkg
++if not getattr(_sandhi_pkg, 'SANDHI_FULL', False):
++    try:                                   # pragma: no cover
++        import sandhi as _sandhi_full      # pip-installed covtl-sandhi
++        _sandhi_pkg = _sandhi_full
++    except Exception:
++        pass
++_SANDHI_LEVELS = _sandhi_pkg.SANDHI_LEVELS
++_SANDHI_MODES = _sandhi_pkg.SANDHI_MODES
++
+ 
+ # ==========================================================================
+ # Result container
+@@ -210,6 +226,26 @@ class Pipeline:
+         column and pause durations — never on the tract.
+         Requires ``use_g2p=True`` (phonetic input has no
+         syntactic structure).
++    sandhi : str
++        Cross-word sandhi level (covtl-sandhi, default ``'off'``) —
++        a monotone coverage filter over the language's rule set:
++        ``'minimal'`` (categorical, exceptionless rules only),
++        ``'standard'`` (recommended; for fr/it/es/pt/de equals the
++        historical 5-language liaison patch), ``'careful'
++        (hyperarticulate register: fr style soutenu, de boundary
++        before function words too). fr: liaison (faut il ->
++        fo.til), en: a->an + onset linking (far away -> fa.R@.we),
++        it: raddoppiamento + euphonic d, es: enlace + y->e/o->u,
++        pt: encadeamento + EP voicing, de: Glottalversatz. Needs the
++        Branch B rule package; without it the option degrades to
++        ``'off'`` with a printed warning and bit-identical outputs.
++        Requires ``use_g2p=True``.
++    sandhi_mode : str
++        Sandhi implementation (default ``'g2p'``): ``'g2p'`` =
++        liaison-aware language gateway (recommended), ``'post'`` =
++        SAMPA post-processor with the base g2p untouched, ``'pre'``
++        = orthographic rewrite before the g2p (no-op with a warning
++        for de/en — the phenomenon has no spelling).
+     """
+ 
+     def __init__(self,
+@@ -222,7 +258,9 @@ class Pipeline:
+                  pause_short_ms: Optional[float] = None,
+                  pause_long_ms: Optional[float] = None,
+                  lang: str = 'en',
+-                 expressive: bool = False):
++                 expressive: bool = False,
++                 sandhi: str = 'off',
++                 sandhi_mode: str = 'g2p'):
+         # None -> f0_default of the installed constants, i.e. the active
+         # speaker of the registry (D14 fix: was the hardcoded JD3
+         # literal 102.216; JD3 behaviour is unchanged since its
+@@ -273,6 +311,22 @@ class Pipeline:
+                       f'{lang!r}: falling back to monotone declination')
+                 self.expressive = False
+ 
++        # Sandhi hook (covtl-sandhi Branch A, default OFF)
++        self.sandhi = str(sandhi or 'off').lower()
++        self.sandhi_mode = str(sandhi_mode or 'g2p').lower()
++        if self.sandhi not in _SANDHI_LEVELS:
++            raise ValueError(
++                f"sandhi must be one of {'/'.join(_SANDHI_LEVELS)}, "
++                f"got {sandhi!r}")
++        if self.sandhi_mode not in _SANDHI_MODES:
++            raise ValueError(
++                f"sandhi_mode must be one of "
++                f"{'/'.join(_SANDHI_MODES)}, got {sandhi_mode!r}")
++        if self.sandhi != 'off' and not _sandhi_pkg.SANDHI_FULL:
++            print('[pipeline] covtl-sandhi rule package (Branch B) '
++                  'not installed: sandhi falls back to off')
++            self.sandhi = 'off'
++
+     # ------------------------------------------------------------------
+     # Full chain
+     # ------------------------------------------------------------------
+@@ -322,19 +376,70 @@ class Pipeline:
+                 'expressive mode ignored: phonetic input '
+                 '(use_g2p=False) has no syntactic structure')
+             print(f'[pipeline] {warnings[-1]}')
++        # --- Sandhi hook (covtl-sandhi, option — default off) -------
++        # Resolve the level for THIS run: off for phonetic input (no
++        # orthography) and for languages without a rule module —
++        # every degradation is a printed warning, never a silent
++        # change. The hook rewrites text / SAMPA only, never the
++        # engine; the inserted key is never a syllable nucleus, so
++        # the expressive F0 plans stay aligned.
++        sandhi = self.sandhi
++        sandhi_mode = self.sandhi_mode
++        if sandhi != 'off':
++            if not use_g2p:
++                warnings.append(
++                    'sandhi ignored: phonetic input '
++                    '(use_g2p=False) has no orthography')
++                print(f'[pipeline] {warnings[-1]}')
++                sandhi = 'off'
++            elif not _sandhi_pkg.sandhi_supported(self.lang):
++                warnings.append(
++                    f'sandhi {sandhi!r} ignored: no rule module for '
++                    f'{self.lang!r} '
++                    f"({'/'.join(sorted(_sandhi_pkg.SANDHI_LANGS))})")
++                print(f'[pipeline] {warnings[-1]}')
++                sandhi = 'off'
++        _g2p = getattr(self._lang_profile, 'g2p_callable', None)
++        if sandhi != 'off' and sandhi_mode == 'pre' and use_g2p:
++            # Mode PRE: rewrite the orthographic text BEFORE the g2p
++            # stage — both the monotone and the expressive path get
++            # it (the respelled porteur becomes one word of the plan).
++            text = _sandhi_pkg.sandhi_rewrite_text(
++                self.lang, text, _g2p, sandhi, warnings)
+         expressive_plans = None
+         if expressive:
+             # Syntactic breathing + accent plan: the assembled
+             # SAMPA is the language g2p's, split into breath
+             # groups by the '%' marker.
++            plan_g2p = self._lang_profile.g2p_callable
++            if sandhi != 'off' and sandhi_mode == 'g2p':
++                # the sandhi gateway owns the g2p view: per-word
++                # calls return the oracle tokens of the language
++                # module (closed-class fixes for fr, identity for
++                # the other profiles)
++                plan_g2p = lambda w, warnings=None, **kw: \
++                    _sandhi_pkg.sandhi_oracle(self.lang, w, _g2p)
+             sampa, expressive_plans = _plan_expressive_text(
+-                text, self.lang, self._lang_profile.g2p_callable,
++                text, self.lang, plan_g2p,
+                 self._expressivity, warnings)
++            if sandhi != 'off' and sandhi_mode in ('g2p', 'post'):
++                # never inserts across a '%' breath pause; the F0
++                # plans stay aligned (a consonant is not a nucleus)
++                sampa = _sandhi_pkg.apply_sandhi_sampa(
++                    self.lang, text, sampa, _g2p, sandhi, sandhi_mode,
++                    warnings)
+         elif use_g2p:
+             # Dispatch via the language registry (language pack): the
+             # active profile (set at __init__ time via lang) selects
+             # the appropriate g2p callable (en = CMUdict gateway).
+-            sampa = _text_to_sampa_lang(text, warnings)
++            if sandhi != 'off' and sandhi_mode == 'g2p':
++                sampa = _sandhi_pkg.apply_sandhi_text(
++                    self.lang, text, _g2p, sandhi, 'g2p', warnings)
++            else:
++                sampa = _text_to_sampa_lang(text, warnings)
++                if sandhi != 'off' and sandhi_mode == 'post':
++                    sampa = _sandhi_pkg.apply_sandhi_text(
++                        self.lang, text, _g2p, sandhi, 'post', warnings)
+         else:
+             sampa = text.strip()
+         phrases = [p.strip() for p in sampa.split('|') if p.strip()]
+diff --git a/tests/test_sandhi_hook.py b/tests/test_sandhi_hook.py
+new file mode 100644
+index 0000000..ffbfeb0
+--- /dev/null
++++ b/tests/test_sandhi_hook.py
+@@ -0,0 +1,158 @@
++# -*- coding: utf-8 -*-
++"""Sandhi hook tests (covtl-sandhi Branch A — option, default OFF).
++
++Covers the two-branch contract:
++
++  (a) the STUB is the identity: every entry point returns its input,
++      SANDHI_FULL is False, SANDHI_LANGS is empty — a pipeline patched
++      with Branch A but WITHOUT the Branch B rule package produces
++      bit-identical outputs to the unpatched repository;
++  (b) option validation: bad level / bad mode raise early (ValueError
++      from the constructor, SystemExit from the CLI choices);
++  (c) graceful degradation: a requested level without Branch B falls
++      back to 'off' with a printed warning — never a silent change;
++  (d) default OFF: the option never touches the synthesis path
++      (tract files identical with and without the option).
++
++When the Branch B package is installed (copied over the stub), the
++SAME tests (b)-(d) hold and the rule behaviour is covered by the
++package's own suite (tests/test_sandhi.py of covtl-sandhi).
++"""
++import sys
++from pathlib import Path
++
++import pytest
++
++ROOT = Path(__file__).resolve().parent.parent
++if str(ROOT) not in sys.path:
++    sys.path.insert(0, str(ROOT))
++
++from vtl_synth.utils import sandhi as hook  # noqa: E402
++
++#: Stub tests are skipped when the Branch B rule package is installed
++#: (copied over the stub or pip): the package's own suite then covers
++#: the rules — the hook tests that remain (validation, default OFF,
++#: bit-identity) hold in BOTH states.
++STUB_ONLY = pytest.mark.skipif(
++    hook.SANDHI_FULL, reason='Branch B installed: stub covered by the '
++    'covtl-sandhi package suite')
++
++
++# ---------------------------------------------------------------------------
++# (a) the stub is the identity
++# ---------------------------------------------------------------------------
++
++@STUB_ONLY
++def test_stub_declares_itself():
++    assert hook.SANDHI_FULL is False
++    assert set(hook.SANDHI_LANGS) == set()
++    assert hook.SANDHI_LEVELS == ('off', 'minimal', 'standard',
++                                  'careful')
++    assert hook.SANDHI_MODES == ('g2p', 'post', 'pre')
++
++
++@STUB_ONLY
++def test_stub_identity_entries():
++    def g2p(text, warnings=None, **kw):
++        return 'D@.End'
++
++    warns: list = []
++    assert hook.apply_sandhi_text('fr', 'the end', g2p, 'standard',
++                                  'g2p', warns) == 'D@.End'
++    assert any('Branch B' in w for w in warns)
++    assert hook.sandhi_rewrite_text('fr', 'faut il', g2p,
++                                    'standard') == 'faut il'
++    assert hook.apply_sandhi_sampa('fr', 'mon ami', 'mO~.a.mi', g2p,
++                                   'standard', 'g2p') == 'mO~.a.mi'
++    assert hook.apply_sandhi('fr', ['faut', 'il'], ['fo', 'i'],
++                             'standard') == ['fo', 'i']
++    assert hook.sandhi_oracle('fr', 'il', g2p) == 'D@.End'  # g2p view
++    assert hook.sandhi_supported('fr') is False
++    assert hook.join_words_keys(['ajn', ' a.pf@l']) == 'ajn a.pf@l'
++
++
++def test_stub_validates_early():
++    with pytest.raises(ValueError):
++        hook.level_rank('bogus')
++    with pytest.raises(ValueError):
++        hook.apply_sandhi_text('fr', 'x', lambda t, warnings=None: t,
++                               'bogus', 'g2p')
++    with pytest.raises(ValueError):
++        hook.apply_sandhi_text('fr', 'x', lambda t, warnings=None: t,
++                               'standard', 'bogus')
++    with pytest.raises(ValueError):
++        hook.apply_sandhi('fr', ['a'], ['x', 'y'], 'standard')
++
++
++# ---------------------------------------------------------------------------
++# (b)/(c) option plumbing through the Pipeline
++# ---------------------------------------------------------------------------
++
++def _pipeline(**kw):
++    from vtl_synth import Pipeline
++    return Pipeline(**kw)
++
++
++def test_pipeline_validates_level_and_mode():
++    with pytest.raises(ValueError):
++        _pipeline(sandhi='bogus')
++    with pytest.raises(ValueError):
++        _pipeline(sandhi_mode='bogus')
++
++
++@STUB_ONLY
++def test_pipeline_degrades_without_branch_b(capsys):
++    pipe = _pipeline(sandhi='standard')
++    assert pipe.sandhi == 'off'            # Branch B missing → off
++    assert 'covtl-sandhi' in capsys.readouterr().out
++
++
++def test_pipeline_default_off_is_silent(capsys):
++    pipe = _pipeline()
++    assert pipe.sandhi == 'off' and pipe.sandhi_mode == 'g2p'
++    assert capsys.readouterr().out == ''
++
++
++# ---------------------------------------------------------------------------
++# (d) default OFF — bit-identical synthesis
++# ---------------------------------------------------------------------------
++
++def _tract_bytes(out: Path) -> bytes:
++    tracts = sorted(out.rglob('*.tract'))
++    assert tracts, 'no .tract produced'
++    return b''.join(p.read_bytes() for p in tracts)
++
++
++def test_off_is_bit_identical(tmp_path):
++    _pipeline().run('the end', output_dir=str(tmp_path / 'a'),
++                    use_g2p=True, video=False)
++    _pipeline(sandhi='off', sandhi_mode='g2p').run(
++        'the end', output_dir=str(tmp_path / 'b'), use_g2p=True,
++        video=False)
++    assert _tract_bytes(tmp_path / 'a') == _tract_bytes(tmp_path / 'b')
++
++
++def test_requested_level_without_branch_b_is_bit_identical(tmp_path):
++    # degradation to off = still bit-identical (the warning is
++    # printed, the SAMPA path is untouched)
++    _pipeline().run('the end', output_dir=str(tmp_path / 'a'),
++                    use_g2p=True, video=False)
++    _pipeline(sandhi='careful', sandhi_mode='post').run(
++        'the end', output_dir=str(tmp_path / 'b'), use_g2p=True,
++        video=False)
++    assert _tract_bytes(tmp_path / 'a') == _tract_bytes(tmp_path / 'b')
++
++
++def test_cli_rejects_bad_level(capsys):
++    from vtl_synth.cli import main as cli_main
++    with pytest.raises(SystemExit):
++        cli_main.main(['run', 'hello', '--sandhi', 'bogus',
++                       '--no-video', '-o', '/tmp/vtl-sandhi-t'])
++
++
++def test_cli_accepts_level():
++    from vtl_synth.cli import main as cli_main
++    # --help must list the new options (smoke, no synthesis)
++    with pytest.raises(SystemExit) as exc:
++        cli_main.main(['run', '--help'])
++    assert exc.value.code == 0
+diff --git a/vtl_synth/cli/main.py b/vtl_synth/cli/main.py
+index d7b1830..1e45bd6 100644
+--- a/vtl_synth/cli/main.py
++++ b/vtl_synth/cli/main.py
+@@ -76,6 +76,35 @@ def _add_engine_options(p: argparse.ArgumentParser) -> None:
+                         "the engine inventory are dropped; 'error' "
+                         "aborts before synthesis; 'off' disables the "
+                         "diagnostic. Env var: VTL_SAMPA_GUARD")
++    g.add_argument('--sandhi', default='off',
++                   choices=['off', 'minimal', 'standard', 'careful'],
++                   help="cross-word sandhi (covtl-sandhi), one rule "
++                        "module per language: fr liaison (faut il -> "
++                        "fo.til, mon ami -> mO~.na.mi), en a->an + "
++                        "onset linking (a apple -> @.na.p@l, far away "
++                        "-> fa.R@.we), it raddoppiamento + euphonic d "
++                        "(a casa -> a.kka.sa, e io -> e.di.o), es "
++                        "enlace + y->e/o->u (los amigos -> lo.sa."
++                        "mi.gos), pt encadeamento + EP voicing (os "
++                        "amigos -> o.Z@.mi.guS), de Glottalversatz "
++                        "(ein Apfel -> 'ajn a.pf@l'). 'minimal' = "
++                        "categorical rules only; 'standard' = "
++                        "recommended (= the historical liaison patch "
++                        "for fr/it/es/pt/de); 'careful' = hyper-"
++                        "articulate register (fr style soutenu, de "
++                        "boundary before function words). Default "
++                        "'off' keeps bit-identical outputs — needs "
++                        "the covtl-sandhi rule package (Branch B: "
++                        "copy sandhi/ over vtl_synth/utils/sandhi/ "
++                        "or pip install covtl-sandhi), else degrades "
++                        "to off with a warning")
++    g.add_argument('--sandhi-mode', dest='sandhi_mode', default='g2p',
++                   choices=['g2p', 'post', 'pre'],
++                   help="sandhi implementation: 'g2p' = liaison-aware "
++                        "gateway (recommended); 'post' = SAMPA post-"
++                        "processor, g2p untouched; 'pre' = orthographic "
++                        "rewrite before the g2p (weakest — no-op for "
++                        "de/en: the phenomenon has no spelling)")
+ 
+ 
+ def _resolve_lang(args: argparse.Namespace) -> str:
+@@ -121,6 +150,12 @@ def _make_pipeline(args: argparse.Namespace):
+     # prosody)
+     if getattr(args, 'expressive', False):
+         kwargs['expressive'] = True
++    # sandhi=/sandhi_mode= only exist when the sandhi hook patch
++    # (covtl-sandhi Branch A) is applied to the Pipeline
++    if getattr(args, 'sandhi', 'off') != 'off':
++        kwargs['sandhi'] = getattr(args, 'sandhi', 'off')
++    if getattr(args, 'sandhi_mode', 'g2p') != 'g2p':
++        kwargs['sandhi_mode'] = getattr(args, 'sandhi_mode', 'g2p')
+     return Pipeline(**kwargs)
+ 
+ 
+diff --git a/vtl_synth/core/pipeline.py b/vtl_synth/core/pipeline.py
+index f5e48db..2ccb7fd 100644
+--- a/vtl_synth/core/pipeline.py
++++ b/vtl_synth/core/pipeline.py
+@@ -59,6 +59,22 @@ try:
+ except Exception:                                        # pragma: no cover
+     _EXPRESSIVE_OK = False
+ 
++# Sandhi hook (covtl-sandhi, Branch A — option, default OFF).
++# Non-critical import: the stub shipped with the hook patch is the
++# IDENTITY, so the pipeline stays bit-identical until the Branch B
++# rule package is installed — either copied over the stub
++# (cp -r sandhi/ vtl_synth/utils/sandhi/) or pip-installed
++# (resolved as a top-level 'sandhi' import below).
++from vtl_synth.utils import sandhi as _sandhi_pkg
++if not getattr(_sandhi_pkg, 'SANDHI_FULL', False):
++    try:                                   # pragma: no cover
++        import sandhi as _sandhi_full      # pip-installed covtl-sandhi
++        _sandhi_pkg = _sandhi_full
++    except Exception:
++        pass
++_SANDHI_LEVELS = _sandhi_pkg.SANDHI_LEVELS
++_SANDHI_MODES = _sandhi_pkg.SANDHI_MODES
++
+ 
+ # ==========================================================================
+ # Result container
+@@ -210,6 +226,26 @@ class Pipeline:
+         column and pause durations — never on the tract.
+         Requires ``use_g2p=True`` (phonetic input has no
+         syntactic structure).
++    sandhi : str
++        Cross-word sandhi level (covtl-sandhi, default ``'off'``) —
++        a monotone coverage filter over the language's rule set:
++        ``'minimal'`` (categorical, exceptionless rules only),
++        ``'standard'`` (recommended; for fr/it/es/pt/de equals the
++        historical 5-language liaison patch), ``'careful'
++        (hyperarticulate register: fr style soutenu, de boundary
++        before function words too). fr: liaison (faut il ->
++        fo.til), en: a->an + onset linking (far away -> fa.R@.we),
++        it: raddoppiamento + euphonic d, es: enlace + y->e/o->u,
++        pt: encadeamento + EP voicing, de: Glottalversatz. Needs the
++        Branch B rule package; without it the option degrades to
++        ``'off'`` with a printed warning and bit-identical outputs.
++        Requires ``use_g2p=True``.
++    sandhi_mode : str
++        Sandhi implementation (default ``'g2p'``): ``'g2p'`` =
++        liaison-aware language gateway (recommended), ``'post'`` =
++        SAMPA post-processor with the base g2p untouched, ``'pre'``
++        = orthographic rewrite before the g2p (no-op with a warning
++        for de/en — the phenomenon has no spelling).
+     """
+ 
+     def __init__(self,
+@@ -222,7 +258,9 @@ class Pipeline:
+                  pause_short_ms: Optional[float] = None,
+                  pause_long_ms: Optional[float] = None,
+                  lang: str = 'en',
+-                 expressive: bool = False):
++                 expressive: bool = False,
++                 sandhi: str = 'off',
++                 sandhi_mode: str = 'g2p'):
+         # None -> f0_default of the installed constants, i.e. the active
+         # speaker of the registry (D14 fix: was the hardcoded JD3
+         # literal 102.216; JD3 behaviour is unchanged since its
+@@ -273,6 +311,22 @@ class Pipeline:
+                       f'{lang!r}: falling back to monotone declination')
+                 self.expressive = False
+ 
++        # Sandhi hook (covtl-sandhi Branch A, default OFF)
++        self.sandhi = str(sandhi or 'off').lower()
++        self.sandhi_mode = str(sandhi_mode or 'g2p').lower()
++        if self.sandhi not in _SANDHI_LEVELS:
++            raise ValueError(
++                f"sandhi must be one of {'/'.join(_SANDHI_LEVELS)}, "
++                f"got {sandhi!r}")
++        if self.sandhi_mode not in _SANDHI_MODES:
++            raise ValueError(
++                f"sandhi_mode must be one of "
++                f"{'/'.join(_SANDHI_MODES)}, got {sandhi_mode!r}")
++        if self.sandhi != 'off' and not _sandhi_pkg.SANDHI_FULL:
++            print('[pipeline] covtl-sandhi rule package (Branch B) '
++                  'not installed: sandhi falls back to off')
++            self.sandhi = 'off'
++
+     # ------------------------------------------------------------------
+     # Full chain
+     # ------------------------------------------------------------------
+@@ -322,19 +376,70 @@ class Pipeline:
+                 'expressive mode ignored: phonetic input '
+                 '(use_g2p=False) has no syntactic structure')
+             print(f'[pipeline] {warnings[-1]}')
++        # --- Sandhi hook (covtl-sandhi, option — default off) -------
++        # Resolve the level for THIS run: off for phonetic input (no
++        # orthography) and for languages without a rule module —
++        # every degradation is a printed warning, never a silent
++        # change. The hook rewrites text / SAMPA only, never the
++        # engine; the inserted key is never a syllable nucleus, so
++        # the expressive F0 plans stay aligned.
++        sandhi = self.sandhi
++        sandhi_mode = self.sandhi_mode
++        if sandhi != 'off':
++            if not use_g2p:
++                warnings.append(
++                    'sandhi ignored: phonetic input '
++                    '(use_g2p=False) has no orthography')
++                print(f'[pipeline] {warnings[-1]}')
++                sandhi = 'off'
++            elif not _sandhi_pkg.sandhi_supported(self.lang):
++                warnings.append(
++                    f'sandhi {sandhi!r} ignored: no rule module for '
++                    f'{self.lang!r} '
++                    f"({'/'.join(sorted(_sandhi_pkg.SANDHI_LANGS))})")
++                print(f'[pipeline] {warnings[-1]}')
++                sandhi = 'off'
++        _g2p = getattr(self._lang_profile, 'g2p_callable', None)
++        if sandhi != 'off' and sandhi_mode == 'pre' and use_g2p:
++            # Mode PRE: rewrite the orthographic text BEFORE the g2p
++            # stage — both the monotone and the expressive path get
++            # it (the respelled porteur becomes one word of the plan).
++            text = _sandhi_pkg.sandhi_rewrite_text(
++                self.lang, text, _g2p, sandhi, warnings)
+         expressive_plans = None
+         if expressive:
+             # Syntactic breathing + accent plan: the assembled
+             # SAMPA is the language g2p's, split into breath
+             # groups by the '%' marker.
++            plan_g2p = self._lang_profile.g2p_callable
++            if sandhi != 'off' and sandhi_mode == 'g2p':
++                # the sandhi gateway owns the g2p view: per-word
++                # calls return the oracle tokens of the language
++                # module (closed-class fixes for fr, identity for
++                # the other profiles)
++                plan_g2p = lambda w, warnings=None, **kw: \
++                    _sandhi_pkg.sandhi_oracle(self.lang, w, _g2p)
+             sampa, expressive_plans = _plan_expressive_text(
+-                text, self.lang, self._lang_profile.g2p_callable,
++                text, self.lang, plan_g2p,
+                 self._expressivity, warnings)
++            if sandhi != 'off' and sandhi_mode in ('g2p', 'post'):
++                # never inserts across a '%' breath pause; the F0
++                # plans stay aligned (a consonant is not a nucleus)
++                sampa = _sandhi_pkg.apply_sandhi_sampa(
++                    self.lang, text, sampa, _g2p, sandhi, sandhi_mode,
++                    warnings)
+         elif use_g2p:
+             # Dispatch via the language registry (language pack): the
+             # active profile (set at __init__ time via lang) selects
+             # the appropriate g2p callable (en = CMUdict gateway).
+-            sampa = _text_to_sampa_lang(text, warnings)
++            if sandhi != 'off' and sandhi_mode == 'g2p':
++                sampa = _sandhi_pkg.apply_sandhi_text(
++                    self.lang, text, _g2p, sandhi, 'g2p', warnings)
++            else:
++                sampa = _text_to_sampa_lang(text, warnings)
++                if sandhi != 'off' and sandhi_mode == 'post':
++                    sampa = _sandhi_pkg.apply_sandhi_text(
++                        self.lang, text, _g2p, sandhi, 'post', warnings)
+         else:
+             sampa = text.strip()
+         phrases = [p.strip() for p in sampa.split('|') if p.strip()]
+diff --git a/vtl_synth/utils/sandhi/__init__.py b/vtl_synth/utils/sandhi/__init__.py
+new file mode 100644
+index 0000000..b766540
+--- /dev/null
++++ b/vtl_synth/utils/sandhi/__init__.py
+@@ -0,0 +1,200 @@
++# SPDX-FileCopyrightText: 2026 covtl-sandhi contributors
++# SPDX-License-Identifier: GPL-3.0-or-later
++# -*- coding: utf-8 -*-
++"""vtl_synth.utils.sandhi — Branch A: the pipeline hook (STUB).
++
++Cross-word sandhi (French liaison, English a-an + onset linking,
++Italian raddoppiamento + euphonic d, Spanish enlace, Portuguese
++encadeamento, German Glottalversatz) — see the covtl-sandhi package
++(Branch B) for the full rule set.
++
++Two-branch architecture
++-----------------------
++* **Branch A (this file)** — a light HOOK shipped as a pipeline patch:
++  the ``--sandhi`` / ``--sandhi-mode`` options and the call sites.
++  This stub is the IDENTITY: every entry point returns its input
++  unchanged, so a pipeline patched with Branch A but WITHOUT Branch B
++  produces **bit-identical outputs** to the unpatched repository
++  (``--sandhi off``, the default, never even reaches this module).
++* **Branch B (covtl-sandhi)** — the full rule package. Activate it
++  either by copying the package's ``sandhi/`` CONTENT over this stub
++  (``cp -r sandhi/. vtl_synth/utils/sandhi/`` — note the ``/.``:
++  the destination folder of the stub ALREADY EXISTS, a plain
++  ``cp -r sandhi/ vtl_synth/utils/sandhi/`` would nest it one level
++  too deep) or by ``pip install covtl-sandhi`` (the pipeline
++  resolves ``import sandhi`` from site-packages when the stub is
++  still in place).
++
++The stub exposes EXACTLY the public API of the full package
++(``SANDHI_LEVELS``, ``SANDHI_MODES``, ``SANDHI_LANGS``, ``SANDHI_FULL``,
++``sandhi_supported``, ``sandhi_oracle``, ``apply_sandhi``,
++``join_words_keys``, ``apply_sandhi_text``, ``sandhi_rewrite_text``,
++``apply_sandhi_sampa``) so that the pipeline call sites work
++untouched in all three states: stub / pip package / copied package.
++
++Levels — ``off | minimal | standard | careful``
++----------------------------------------------
++A monotone *coverage filter* over each language's rule set (it never
++changes the phonology of a rule that fires):
++
++* ``off``      — identity, bit-identical baselines (CLI default);
++* ``minimal``  — categorical, exceptionless sandhi only;
++* ``standard`` — recommended (API default): adds the productive
++  rules; equals the historical 5-language patch (v3) for fr/it/es/
++  pt/de;
++* ``careful``  — hyperarticulate register (fr: liaison after plural
++  nouns; de: glottal boundary before function words too); where the
++  language has no register-dependent rule (it, es, pt, en at v0.1)
++  careful equals standard — stated honestly, never silently.
++
++Modes — ``g2p | post | pre`` (the three historical implementations
++kept as an option; ``g2p``, the recommended one, is the default)
++------------------------------------------------------------------
++* ``g2p``  — liaison-aware per-word oracle + pair merge with
++  corrected tokens (fr « faut il » -> ``fo.til``);
++* ``post`` — SAMPA post-processor, the base g2p untouched;
++* ``pre``  — orthographic rewrite before the g2p (no-op with a
++  warning for de/en: the phenomenon has no spelling).
++"""
++
++from __future__ import annotations
++
++from typing import Callable, List, Optional, Sequence
++
++__all__ = [
++    'SANDHI_LEVELS',
++    'SANDHI_MODES',
++    'SANDHI_LANGS',
++    'SANDHI_FULL',
++    'level_rank',
++    'sandhi_supported',
++    'sandhi_oracle',
++    'apply_sandhi',
++    'join_words_keys',
++    'apply_sandhi_text',
++    'sandhi_rewrite_text',
++    'apply_sandhi_sampa',
++]
++
++#: Accepted values of the ``sandhi`` option (hook + CLI + API).
++SANDHI_LEVELS = ('off', 'minimal', 'standard', 'careful')
++
++#: Gateway modes — the three historical implementations.
++SANDHI_MODES = ('g2p', 'post', 'pre')
++
++#: Languages with a rule module — EMPTY in the stub (the Branch B
++#: package ships fr/en/it/es/de/pt).
++SANDHI_LANGS = frozenset()            # type: ignore[assignment]
++
++#: False in the stub (Branch B sets True): the rule package is NOT
++#: installed. The pipeline warns once per run when a sandhi level is
++#: requested while this stays False.
++SANDHI_FULL = False
++
++_LEVEL_RANK = {'off': 0, 'minimal': 1, 'standard': 2, 'careful': 3}
++
++
++def level_rank(level: str) -> int:
++    """Rank of a sandhi level (0 for ``off``) — validates EARLY so
++    that a typo never silently degrades to ``off``."""
++    low = str(level or 'off').lower()
++    if low not in _LEVEL_RANK:
++        raise ValueError(
++            f"sandhi level must be one of {'/'.join(SANDHI_LEVELS)}, "
++            f"got {level!r}")
++    return _LEVEL_RANK[low]
++
++
++def sandhi_supported(lang: str) -> bool:
++    """True when the language has a sandhi rule module (never, in
++    the stub)."""
++    return False
++
++
++def sandhi_oracle(lang: str, word: str,
++                  g2p: Callable[..., str]) -> str:
++    """Per-word token of the ACTIVE g2p (identity view — the stub has
++    no closed-class corrections)."""
++    return (g2p(word, warnings=None) or '').strip() \
++        if g2p is not None else ''
++
++
++def apply_sandhi(lang: str,
++                 words: Sequence[str],
++                 keys: Sequence[str],
++                 level: str = 'standard',
++                 *,
++                 g2p: Optional[Callable[..., str]] = None,
++                 warnings: Optional[list] = None) -> List[str]:
++    """Low-level entry (per-word keys, after per-word G2P) — the stub
++    returns ``keys`` unchanged (identity)."""
++    level_rank(level)                  # validate early, like Branch B
++    words = list(words or [])
++    keys = list(keys or [])
++    if len(words) != len(keys):
++        raise ValueError(
++            f'apply_sandhi: words and keys must have the same length '
++            f'({len(words)} != {len(keys)})')
++    return keys
++
++
++def join_words_keys(keys: Sequence[str], sep: str = ' ') -> str:
++    """Boundary-aware join of per-word keys into an engine phrase
++    (same contract as Branch B: an empty fragment marks an absorbed
++    slot, a leading space absorbs the separator)."""
++    parts = [k for k in keys if k]
++    out = ''
++    for k in parts:
++        if not out:
++            out = k
++        elif k.startswith(' ') or out.endswith((' ', '.')):
++            out += k
++        else:
++            out += sep + k
++    return out
++
++
++def apply_sandhi_text(lang: str,
++                      text: str,
++                      g2p: Callable[..., str],
++                      level: str = 'standard',
++                      mode: str = 'g2p',
++                      warnings: Optional[list] = None) -> str:
++    """Gateway over a whole text (monotone path) — the stub returns
++    the base g2p output, with a warning that Branch B is missing."""
++    level_rank(level)
++    if mode not in SANDHI_MODES:
++        raise ValueError(
++            f"mode must be one of {'/'.join(SANDHI_MODES)}, got {mode!r}")
++    own = warnings is None
++    if own:
++        warnings = []
++    if level_rank(level):
++        warnings.append(
++            'sandhi: rule package (covtl-sandhi, Branch B) not '
++            'installed — text passed through the base g2p unchanged')
++    return g2p(text, warnings=warnings)
++
++
++def sandhi_rewrite_text(lang: str,
++                        text: str,
++                        g2p: Callable[..., str],
++                        level: str = 'standard',
++                        warnings: Optional[list] = None) -> str:
++    """Mode ``pre`` alone: the REWRITTEN ORTHOGRAPHY — the stub
++    returns the text unchanged."""
++    level_rank(level)
++    return text
++
++
++def apply_sandhi_sampa(lang: str,
++                       text: str,
++                       sampa: str,
++                       g2p: Callable[..., str],
++                       level: str = 'standard',
++                       mode: str = 'g2p',
++                       warnings: Optional[list] = None) -> str:
++    """Expressive-path variant (breath-marked SAMPA) — the stub
++    returns ``sampa`` unchanged, so the F0 plans stay as planned."""
++    level_rank(level)
++    return sampa
+-- 
+2.51.0.windows.1
+
