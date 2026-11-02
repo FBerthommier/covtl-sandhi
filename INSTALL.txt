@@ -63,3 +63,6 @@ Vérifié sur le main du pipeline :
   * package copié : suite du dépôt inchangée + 30/30 cas CLI
     end-to-end (6 langues x niveaux x modes, SAMPA vérifiés) ;
   * package pip : résolution par le hook vérifiée (fo.til).
+  * aujourd'hui : 214 tests collectés côté pipeline main
+    (hook 10 + composition sandhi x V1V2 8 inclus), 38 côté
+    package ; suite liaison v3 sur la branche backup : 229.

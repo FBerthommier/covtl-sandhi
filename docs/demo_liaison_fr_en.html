@@ -61,7 +61,7 @@ code { background: #eef2fb; border-radius: 4px; padding: 1px 5px;
 <h2>The patch in brief</h2>
 <div class="card">
   <p>The<b>liaison</b>is an inter-word sandhi: the final latent consonant of a word (written, mute at the end of a group) is pronounced before a vowel-initial word. The patch inserts this consonant as<b>the onset of the following syllable</b>, with the usual phonological rules (devoicing d→t, « neuf » v/f, closed aspirated-h list, never after « et », never across a pause).</p>
-  <p>Constraints upheld and tested (384 tests in total with the it/es/pt/de modules, non-regression included):</p>
+  <p>Constraints upheld and tested (384 tests in total at the time of the five-language pack, baseline 41f6571; non-regression included):</p>
   <table>
     <tr><th>constraint</th><th>status</th></tr>
     <tr><td>No modification<b>engine</b>— the engine receives an ordinary linked SAMPA (<code>mO~.na.mi</code>)</td>
