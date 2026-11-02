@@ -44,7 +44,7 @@ covtl-pipeline                     covtl-sandhi (Branch B)
   options. **Without Branch B, the pipeline outputs are
   bit-identical** to those of the unpatched repository — the hook is
   invisible by default (`--sandhi off`). The hook is also **merged
-  into the pipeline's `main` branch** (commit `f60c73e`): on a recent
+  into the pipeline's `main` branch** (commit `82694bc`): on a recent
   clone the `git apply` step is unnecessary — the install scripts
   detect it ("already applied") and skip it; the patch serves older
   checkouts. It is the pipeline's **single** cross-word-sandhi

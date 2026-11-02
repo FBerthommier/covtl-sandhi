@@ -10,7 +10,7 @@
 #   -PipelineDir   where to clone the pipeline (default: .\covtl-pipeline
 #                  next to this script)
 #   -BranchB       activation mode (default: copy - recommended)
-#   -PipelineRef   optional commit to pin, e.g. f60c73e (hook merged in
+#   -PipelineRef   optional commit to pin, e.g. 82694bc (hook merged in
 #                  main) or 181c272 (last pre-hook main). Empty = track
 #                  the remote default branch.
 #
@@ -69,7 +69,7 @@ if ($appliesClean) {
 } else {
     throw @"
 ERROR: patch does not apply cleanly - pipeline tree has drifted.
-       Try pinning a known baseline: .\install.ps1 -PipelineRef f60c73e
+       Try pinning a known baseline: .\install.ps1 -PipelineRef 82694bc
 "@
 }
 

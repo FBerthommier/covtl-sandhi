@@ -11,7 +11,7 @@
 #   pipeline_dir   where to clone the pipeline (default: ./covtl-pipeline
 #                  next to this script)
 #   copy|pip       Branch B activation mode (default: copy — recommended)
-#   pipeline_ref   optional commit to pin, e.g. f60c73e (hook merged in
+#   pipeline_ref   optional commit to pin, e.g. 82694bc (hook merged in
 #                  main) or 181c272 (last pre-hook main). Empty = track
 #                  the remote default branch.
 #
@@ -56,7 +56,7 @@ elif git -C "$PIPELINE_DIR" apply --reverse --check "$PATCH" 2>/dev/null; then
     echo "-- hook patch already applied (skipping)"
 else
     echo "ERROR: patch does not apply cleanly — pipeline tree has drifted."
-    echo "       Try pinning a known baseline: ./install.sh '' copy f60c73e"
+    echo "       Try pinning a known baseline: ./install.sh '' copy 82694bc"
     exit 1
 fi
 

@@ -54,12 +54,12 @@ Vérifié sur le main du pipeline :
   * baseline historique @ 41f6571 : hook seul, sorties BIT-IDENTIQUES
     (155 passés vierge vs 165 hooké = +10 tests hook, 0 régression) ;
   * le hook est DÉSORMAIS INTÉGRÉ au main du pipeline (commit
-    f60c73e, rebasé sur l'état poussé V1V2 @ 181c272) — sur un clone
+    82694bc, rebasé sur l'état poussé V1V2 @ 181c272) — sur un clone
     récent, l'étape `git apply` est sans objet : les scripts
     d'installation la détectent (« already applied ») et la sautent ;
     tests hook sur cette baseline : 10 passed.
     Le patch ci-joint reste utile pour les checkouts antérieurs à
-    f60c73e.
+    82694bc.
   * package copié : suite du dépôt inchangée + 30/30 cas CLI
     end-to-end (6 langues x niveaux x modes, SAMPA vérifiés) ;
   * package pip : résolution par le hook vérifiée (fo.til).

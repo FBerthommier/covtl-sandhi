@@ -1,4 +1,4 @@
-From f60c73ee559340b0f0aa8c59796aab6b76b9c303 Mon Sep 17 00:00:00 2001
+From 82694bc963939cae339ce1e23d292cdd3a62eacb Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Fr=C3=A9d=C3=A9ric=20Berthommier?=
  <FBerthommier@users.noreply.github.com>
 Date: Mon, 2 Nov 2026 15:39:47 +0100
@@ -13,11 +13,11 @@ Content-Transfer-Encoding: 8bit
  README.md                          |   7 +
  docs/ARCHITECTURE.md               |  40 ++++++
  lang_pack/integration/pipeline.py  | 111 +++++++++++++++-
- tests/test_sandhi_hook.py          | 158 +++++++++++++++++++++++
+ tests/test_sandhi_hook.py          | 160 +++++++++++++++++++++++
  vtl_synth/cli/main.py              |  35 +++++
  vtl_synth/core/pipeline.py         | 111 +++++++++++++++-
  vtl_synth/utils/sandhi/__init__.py | 200 +++++++++++++++++++++++++++++
- 8 files changed, 687 insertions(+), 6 deletions(-)
+ 8 files changed, 689 insertions(+), 6 deletions(-)
  create mode 100644 tests/test_sandhi_hook.py
  create mode 100644 vtl_synth/utils/sandhi/__init__.py
 
@@ -295,10 +295,12 @@ index 2b7ff91..1b6104f 100644
          phrases = [p.strip() for p in sampa.split('|') if p.strip()]
 diff --git a/tests/test_sandhi_hook.py b/tests/test_sandhi_hook.py
 new file mode 100644
-index 0000000..ffbfeb0
+index 0000000..a46f4d3
 --- /dev/null
 +++ b/tests/test_sandhi_hook.py
-@@ -0,0 +1,158 @@
+@@ -0,0 +1,160 @@
++# SPDX-FileCopyrightText: 2026 covtl-sandhi contributors
++# SPDX-License-Identifier: GPL-3.0-or-later
 +# -*- coding: utf-8 -*-
 +"""Sandhi hook tests (covtl-sandhi Branch A — option, default OFF).
 +
