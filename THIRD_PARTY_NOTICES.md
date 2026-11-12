@@ -12,7 +12,14 @@ must keep this file, the full `LICENSE`, and — for the HTML demos — the
 - Author: **Peter Birkholz** (TU Dresden) — <https://www.vocaltractlab.de>
 - Role: articulatory synthesizer that produced every WAV embedded in the
   `docs/demo_liaison_*.html` pages (44.1 kHz 16-bit mono, speaker jd3).
-- License: **GPL-3.0** (research use) — <https://www.vocaltractlab.de>.
+- License: **GPL-3.0 (GPLv3)** — confirmed by the official channels,
+  no inference from any "free for research" wording:
+  <https://www.vocaltractlab.de> ("open source under the GNU General
+  Public License"), the official VocalTractLab 2.4 user manual
+  ("free and open source software under the GNU General Public License
+  (GPL)"), and the official development repository
+  <https://github.com/TUD-STKS/VocalTractLab-dev> (`LICENSE` = GPLv3
+  full text).
 - When using these demos or the package in academic work, cite
   VocalTractLab (author, version and site above) alongside the COVTL
   model references.
