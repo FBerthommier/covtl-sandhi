@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "covtl-sandhi"
-version = "0.1.0"
+version = "0.1.1"
 description = "Cross-word sandhi (liaison, raddoppiamento, enlace, encadeamento, Glottalversatz, a-an + onset linking) for the COVTL pipeline languages"
 readme = "README.md"
 requires-python = ">=3.9"
