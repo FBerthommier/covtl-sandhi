@@ -14,7 +14,7 @@ aucune dépendance.
 | it | raddoppiamento sintattico + *d* eufonico | « a casa » → `a.kka.sa`, « e io » → `e.di.o` | `sandhi/it.py` |
 | es | enlace + alternance y→e / o→u | « los amigos » → `lo.sa.mi.gos`, « y Ignacio » → `e.i.gna.Tjo` | `sandhi/es.py` |
 | pt | encadeamento + sonorisation EP | « os amigos » → `o.Z@.mi.guS` | `sandhi/pt.py` |
-| de | Glottalversatz (anti-liaison) | « ein Apfel » → `ajn a.pf@l` | `sandhi/de.py` |
+| de | Glottalversatz (anti-liaison) | « ein Apfel » → `ajn a.pf@l` ; « das ist ein Ei » : 1 frontière (standard) → 2 (careful) | `sandhi/de.py` |
 
 Le moteur de synthèse n'est **jamais** touché : les modules vivent
 dans la couche texte/g2p, ne réécrivent que le texte ou le SAMPA, et

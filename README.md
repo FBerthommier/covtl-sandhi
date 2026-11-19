@@ -14,7 +14,7 @@ dependencies.
 | it | raddoppiamento sintattico + *euphonic d* | "a casa" → `a.kka.sa`, "e io" → `e.di.o` | `sandhi/it.py` |
 | es | enlace + y→e / o→u alternation | "los amigos" → `lo.sa.mi.gos`, "y Ignacio" → `e.i.gna.Tjo` | `sandhi/es.py` |
 | pt | encadeamento + EP voicing | "os amigos" → `o.Z@.mi.guS` | `sandhi/pt.py` |
-| de | Glottalversatz (anti-liaison) | "ein Apfel" → `ajn a.pf@l` | `sandhi/de.py` |
+| de | Glottalversatz (anti-liaison) | "ein Apfel" → `ajn a.pf@l`; "das ist ein Ei": 1 boundary (standard) → 2 (careful) | `sandhi/de.py` |
 
 The synthesis engine is **never** touched: the modules live in the
 text/g2p layer, rewrite only the text or the SAMPA, and compose with

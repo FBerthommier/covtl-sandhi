@@ -1,4 +1,13 @@
-% covtl-sandhi-guide.tex — didactic guide to covtl-sandhi v0.1.0
+%% =====================================================================
+%% SPDX-FileCopyrightText: 2026 Frédéric Berthommier
+%% SPDX-License-Identifier: CC-BY-SA-4.0
+%%
+%% This manual is licensed under the Creative Commons Attribution-
+%% ShareAlike 4.0 International license (CC BY-SA 4.0) - see
+%% LICENSE-DOCS.md at the root of this repository.
+%% =====================================================================
+% covtl-sandhi-guide.tex — didactic guide to covtl-sandhi v0.1.1
+% (facts measured on v0.1.0, re-verified against the v0.1.1 code)
 % US English, pdflatex, report class. Compile: pdflatex x2.
 %
 % Sources (nothing invented): covtl-sandhi v0.1.0 README.md / README.fr.md,
@@ -31,11 +40,11 @@
 \newcommand{\pkg}{\texttt{covtl-sandhi}}
 \newcommand{\pipe}{\texttt{covtl-pipeline}}
 
-\hypersetup{pdftitle={covtl-sandhi v0.1.0 — A Didactic Guide},
+\hypersetup{pdftitle={covtl-sandhi v0.1.1 — A Didactic Guide},
             pdfauthor={covtl-sandhi contributors},
             pdfsubject={Inter-word sandhi for the COVTL pipeline languages}}
 
-\title{\textbf{covtl-sandhi v0.1.0}\\[2mm]
+\title{\textbf{covtl-sandhi v0.1.1}\\[2mm]
        \large A Didactic Guide to Inter-Word Sandhi\\
        in the COVTL Pipeline Languages (fr, en, it, es, pt, de)}
 \author{covtl-sandhi contributors}
@@ -46,7 +55,7 @@
 
 \begin{abstract}
 \noindent
-This guide documents \pkg{} v0.1.0, the standalone package of
+This guide documents \pkg{} v0.1.1 (facts verified against the 0.1.1 code; the 0.1.0 measurements are unchanged), the standalone package of
 \emph{inter-word sandhi} rules for the six languages of the
 \pipe{} articulatory speech-synthesis pipeline. It is written for a
 pipeline user who knows phonetics but not this code base. We explain
@@ -88,6 +97,7 @@ it & raddoppiamento sintattico + euphonic \emph{d} & ``a casa'' & \smp{a.ka.sa} 
 es & enlace + y$\rightarrow$e / o$\rightarrow$u & ``los amigos'' & \smp{los.a.mi.gos} $\rightarrow$ \smp{lo.sa.mi.gos} \\
 pt & encadeamento + EP voicing & ``os amigos'' & \smp{oS.@.mi.guS} $\rightarrow$ \smp{o.Z@.mi.guS} \\
 de & Glottalversatz (anti-liaison) & ``ein Apfel'' & \smp{ajn.a.pf@l} $\rightarrow$ \smp{ajn a.pf@l} \\
+de & Glottalversatz (careful) & ``ein Ei'' & 1 front. $\rightarrow$ 2 \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -142,7 +152,7 @@ synthesis engine is called. Three architectural invariants hold everywhere
   \item \textbf{Every language is respected.} Each rule table applies only to
         word pairs of its own language; any other profile is a no-op with a
         warning. The English profile is covered by its own module (new in
-        v0.1.0), not ignored.
+        v0.1.1), not ignored.
   \item \textbf{Compatibility with the expressive-prosody patch.} The sandhi
         key (inserted or displaced) is always a \emph{consonant}, never a
         syllabic nucleus, and nothing is ever inserted across a pause
@@ -219,7 +229,7 @@ independently:
      \texttt{SANDHI\_FULL = False}\\ pure identity\\
      \texttt{-{}-sandhi} / \texttt{-{}-sandhi-mode}};
   \node[box, fill=green!8] (pkg) at (10.2,-2.3)
-    {\textbf{covtl-sandhi v0.1.0}\\\textsf{the rules — Branch B}\\
+    {\textbf{covtl-sandhi v0.1.1}\\\textsf{the rules — Branch B}\\
      \texttt{fr en it es pt de + base}\\\texttt{data/*.txt} (views)};
   % 1) copy: straight arrow pkg -> stub, label above, in the free gap
   \draw[arrow] (pkg.west) -- (stub.east)
@@ -579,9 +589,13 @@ latent \smp{v} before \emph{a-} (\emph{neuf ans} \smp{n2.va\tld}), latent
 \end{itemize}
 
 The \emph{h aspir\'e} blocking list is an editable view,
-\smp{data/fr\_h\_aspire.txt}: \emph{h\'eros, haut, hache, haie, haine,
-hall, halle, harpe, hasard, h\'elas, hectare, homard, huche, hoyau,
-hamburger}. Note the contrast inside the module: \emph{haricot} is
+\smp{data/fr\_h\_aspire.txt} --- 22 entries, cited here in full:
+\emph{h\'eros, heros, haut, hauts, haute, hautes, hauteur, hauteurs,
+hache, haie, haine, hall, halle, harpe, hasard, h\'elas, helas,
+hectare, homard, huche, hoyau, hamburger}. The list carries both the
+accented and the unaccented spellings (\emph{h\'eros}/\emph{heros},
+\emph{h\'elas}/\emph{helas}) and the inflected forms of \emph{haut}.
+Note the contrast inside the module: \emph{haricot} is
 \emph{not} in the list — modern usage treats its \emph{h} as mute, so
 \emph{les haricots} links normally.
 
@@ -702,7 +716,7 @@ unlinked in \smp{pre}.
 ``far away'' \quad$\rightarrow$\quad \smp{fa.R@.we}
 \end{quote}
 
-\noindent The English module (new in v0.1.0, \smp{sandhi/en.py}) mirrors two
+\noindent The English module (new in v0.1.1, \smp{sandhi/en.py}) mirrors two
 Romance phenomena of the package and measures everything on the pipeline's
 CMUdict gateway.
 
@@ -722,6 +736,13 @@ $\rightarrow$ \smp{ju...} (initial glide $\rightarrow$ \emph{a}). All three
 behave correctly \emph{by construction} (tests
 \smp{test\_en\_an\_test\_phonetique}). Level: \textbf{minimal}
 (categorical, exceptionless).
+
+The rule is \emph{one-way}: it inserts \smp{n} before a vowel-initial
+token but never removes or moves an existing \smp{n}. An already-spelled
+\emph{an} is left untouched whatever follows --- even before a consonant
+token (\smp{an one}: the article keeps its \smp{n}, measured
+\smp{decide\_pair('a','one')} $=$ no decision; only
+\smp{('a','hour')} and \smp{('a','apple')} insert).
 
 \section{Onset linking, and why linking-r is not a separate rule}
 
@@ -1038,6 +1059,14 @@ word; \textbf{careful = standard}.
 % ===========================================================================
 
 \begin{quote}\large``ein Apfel'' $\rightarrow$ \smp{ajn a.pf@l}\end{quote}
+
+The pair \emph{das ist ein Ei} discriminates the two levels: at
+\textbf{standard} the glottal boundary stands before \emph{Ei} only
+(\emph{ein} is a function word, exempted), at \textbf{careful} the
+exemption is lifted and a second boundary stands before \emph{ein} as
+well --- measured \smp{std.count(' ')}~$=$~1 vs
+\smp{careful.count(' ')}~$=$~2 (test
+\smp{test\_de\_careful\_leve\_exemption}).
 
 \noindent The framework's deliberate mirror image (\smp{sandhi/de.py}, after
 Kohler 1994 and Duden): where French inserts a consonant and Spanish
@@ -1370,7 +1399,7 @@ Each module additionally exposes the historical v3 API
   and other languages'', \emph{JIPA} (1994).
 \bibitem{duden} \emph{Duden — Aussprachew\"orterbuch}, Bd.~6.
 \bibitem{internal} Internal sources: \smp{README.md} / \smp{README.fr.md},
-  \smp{INSTALL.txt}, \smp{CHANGELOG.md} of \pkg{} v0.1.0; docstrings and
+  \smp{INSTALL.txt}, \smp{CHANGELOG.md} of \pkg{} v0.1.1; docstrings and
   tables of \smp{sandhi/\{fr,en,it,es,pt,de\}.py} and \smp{sandhi/base.py};
   \smp{tests/test\_sandhi.py}; \smp{README\_LIAISON.md} of the five-language
   pack v3.
